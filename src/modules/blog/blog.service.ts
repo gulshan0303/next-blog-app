@@ -1,5 +1,7 @@
 import { blogRepository } from './blog.repository';
 import { redis } from '../../lib/redis';
+import { AppError } from '../../utils/AppError';
+
 export class BlogService {
   async createBlog(data: any, userId: string) {
     return blogRepository.create({
@@ -33,7 +35,13 @@ export class BlogService {
   }
 
   async getBlogById(id: string) {
-    return blogRepository.findById(id);
+    const blog = await blogRepository.findById(id);
+
+    if (!blog) {
+      throw new AppError('Blog not found', 404);
+    }
+
+    return blog;
   }
 
   async updateBlog(id: string, data: any) {

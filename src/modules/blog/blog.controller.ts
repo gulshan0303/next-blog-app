@@ -3,6 +3,7 @@ import { authMiddleware } from '../../middleware/auth.middleware';
 import { createBlogSchema } from './blog.schema';
 import { validate } from '../../utils/validate';
 import { rateLimitMiddleware } from '../../middleware/rateLimit.middleware';
+import { handleError } from '../../utils/errorHandler';
 
 export class BlogController {
   async create(req: Request) {
@@ -17,10 +18,7 @@ export class BlogController {
 
       return Response.json({ success: true, data: blog });
     } catch (error: any) {
-      return Response.json(
-        { success: false, message: error.message },
-        { status: 400 },
-      );
+      return handleError(error);
     }
   }
 
@@ -38,17 +36,17 @@ export class BlogController {
 
       return Response.json({ success: true, data: blogs });
     } catch (error: any) {
-      return Response.json(
-        { success: false, message: error.message },
-        { status: 400 },
-      );
+      return handleError(error);
     }
   }
 
   async getById(id: string) {
-    console.log('controller id:', id);
-    const blog = await blogService.getBlogById(id);
-    return Response.json({ success: true, data: blog });
+    try {
+      const blog = await blogService.getBlogById(id);
+      return Response.json({ success: true, data: blog });
+    } catch (error) {
+      return handleError(error);
+    }
   }
 
   async update(req: Request, id: string) {
