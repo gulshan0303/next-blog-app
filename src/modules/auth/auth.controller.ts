@@ -1,16 +1,17 @@
 import { authService } from './auth.service';
 import { setRefreshTokenCookie } from '../../utils/cookie';
-  // auth.controller.ts
-
 import { verifyRefreshToken, generateAccessToken, generateRefreshToken } from '../../utils/jwt';
 import { parse } from 'cookie';
+import { registerSchema } from './auth.schema';
+import { validate } from '../../utils/validate';
 
 
 export class AuthController {
   async register(req: Request) {
     try {
       const body = await req.json();
-      const user = await authService.register(body);
+       const validatedData = await validate(registerSchema, body);
+      const user = await authService.register(validatedData);
 
       return Response.json({ success: true, data: user });
     } catch (error: any) {

@@ -1,12 +1,16 @@
 import { blogService } from './blog.service';
 import { authMiddleware } from '../../middleware/auth.middleware';
-
+import { createBlogSchema } from './blog.schema';
+import { validate } from '../../utils/validate';
 export class BlogController {
   async create(req: Request) {
     try {
       const user: any = authMiddleware(req);
       const body = await req.json();
-      const blog = await blogService.createBlog(body, user.userId);
+
+       const validatedData = await validate(createBlogSchema, body);
+
+      const blog = await blogService.createBlog(validatedData, user.userId);
 
       return Response.json({ success: true, data: blog });
     } catch (error: any) {
