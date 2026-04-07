@@ -1,5 +1,5 @@
 import { blogRepository } from './blog.repository';
-
+import { redis } from '../../lib/redis';
 export class BlogService {
   async createBlog(data: any, userId: string) {
     return blogRepository.create({
@@ -15,11 +15,21 @@ export class BlogService {
 
     const skip = (page - 1) * limit;
 
-    return blogRepository.findAll({
+    const cacheKey = `blogs:${JSON.stringify(query)}`;
+
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const blogs = await blogRepository.findAll({
       skip,
       take: limit,
       search,
     });
+    await redis.set(cacheKey, JSON.stringify(blogs), 'EX', 60);
+    return blogs;
   }
 
   async getBlogById(id: string) {

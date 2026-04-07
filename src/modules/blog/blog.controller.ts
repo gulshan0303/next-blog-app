@@ -2,13 +2,16 @@ import { blogService } from './blog.service';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { createBlogSchema } from './blog.schema';
 import { validate } from '../../utils/validate';
+import { rateLimitMiddleware } from '../../middleware/rateLimit.middleware';
+
 export class BlogController {
   async create(req: Request) {
     try {
+      await rateLimitMiddleware(req);
       const user: any = authMiddleware(req);
       const body = await req.json();
 
-       const validatedData = await validate(createBlogSchema, body);
+      const validatedData = await validate(createBlogSchema, body);
 
       const blog = await blogService.createBlog(validatedData, user.userId);
 
@@ -43,7 +46,7 @@ export class BlogController {
   }
 
   async getById(id: string) {
-     console.log('controller id:', id); 
+    console.log('controller id:', id);
     const blog = await blogService.getBlogById(id);
     return Response.json({ success: true, data: blog });
   }
