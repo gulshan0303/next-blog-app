@@ -2,28 +2,37 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginUser } from '../../features/auth/auth.service';
-import { setAccessToken } from '../../store/auth.store';
+import { registerUser } from '../../features/auth/auth.service';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirm) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await loginUser({ email, password });
-      const token = res.accessToken ?? res.data?.accessToken;
-      if (token) setAccessToken(token);
-      router.push('/blog'); // ✅ direct redirect, no delay needed
+      await registerUser({ email, password });
+      router.push('/login'); // ✅ redirect to login after register
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -35,14 +44,14 @@ export default function LoginPage() {
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ca3af', margin: '0 0 6px' }}>
-          Welcome back
+          Get started
         </p>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#111' }}>Sign in to your account</h1>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#111' }}>Create your account</h1>
         <div style={{ width: 32, height: 2, background: '#e5e7eb', marginTop: 16 }} />
       </div>
 
       {/* Form */}
-      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
         {/* Email */}
         <div>
@@ -73,7 +82,7 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder="Min. 6 characters"
             style={{
               width: '100%', boxSizing: 'border-box', padding: '10px 14px',
               border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 15,
@@ -82,7 +91,32 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* Error */}
+        {/* Confirm Password */}
+        <div>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 6 }}>
+            Confirm password
+          </label>
+          <input
+            type="password"
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="Re-enter your password"
+            style={{
+              width: '100%', boxSizing: 'border-box', padding: '10px 14px',
+              border: `1px solid ${confirm && confirm !== password ? '#fca5a5' : '#e5e7eb'}`,
+              borderRadius: 8, fontSize: 15, outline: 'none', color: '#111'
+            }}
+          />
+          {/* inline mismatch hint */}
+          {confirm && confirm !== password && (
+            <p style={{ margin: '5px 0 0', fontSize: 12, color: '#dc2626' }}>
+              Passwords do not match
+            </p>
+          )}
+        </div>
+
+        {/* Error banner */}
         {error && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -104,16 +138,16 @@ export default function LoginPage() {
             cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4
           }}
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'Creating account...' : 'Create account'}
         </button>
 
       </form>
 
       {/* Footer */}
       <p style={{ marginTop: 24, fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
-        Don't have an account?{' '}
-        <a href="/register" style={{ color: '#374151', fontWeight: 500, textDecoration: 'none' }}>
-          Register
+        Already have an account?{' '}
+        <a href="/login" style={{ color: '#374151', fontWeight: 500, textDecoration: 'none' }}>
+          Sign in
         </a>
       </p>
 
